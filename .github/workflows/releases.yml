@@ -1,0 +1,45 @@
+name: Release
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    strategy:
+      matrix:
+        goos: [linux, darwin, windows]
+        goarch: [amd64]
+        include:
+          - goos: windows
+            ext: .exe
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          check-latest: true
+          
+      - name: Build
+        run: |
+          BINARY_NAME=dir2txt-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}
+          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o $BINARY_NAME main.go
+          
+      - name: Create Release
+        if: success() && matrix.goos == 'linux'
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          
+      - name: Upload Release Assets
+        uses: softprops/action-gh-release@v1
+        if: success()
+        with:
+          files: dir2txt-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}
