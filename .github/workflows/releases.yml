@@ -1,0 +1,33 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        goos: [linux, darwin, windows]
+        goarch: [amd64]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.21'
+
+      - name: Build
+        run: |
+          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o dir2txt-${{ matrix.goos }}-${{ matrix.goarch }} main.go
+
+      - name: Upload Release Asset
+        uses: actions/upload-artifact@v3
+        with:
+          name: dir2txt-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: dir2txt-${{ matrix.goos }}-${{ matrix.goarch }}
